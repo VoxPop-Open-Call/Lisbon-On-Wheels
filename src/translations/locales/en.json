@@ -1,0 +1,62 @@
+{
+  "COMMON": {
+    "BUTTONS": {
+      "CANCEL": "Cancel",
+      "DELETE": "Delete",
+      "CREATE": "CREATE"
+    }
+  },
+  "HEADER": { "TITLE": "LISBON ON WHEELS", "SUBTITLE": "Accessibility data for Lisbon" },
+  "SIDEBAR": {
+    "DASHBOARD": "Dashboard",
+    "CREATE": {
+      "TITLE": "Create"
+    }
+  },
+  "FOOTER": {
+    "SPONSOR": {
+      "PART_1": "Project co-financed by the European Regional Development Fund",
+      "PART_2": "through the Urban Innovative Actions (UIA) initiative."
+    }
+  },
+  "CREATE_PAGE": {
+    "TITLE_AND_DESCR": "Choose a title and a description",
+    "CATEGORIES": "Select your categories",
+    "DATA": "Select your data",
+    "DASHBOARD": "Compose your dashboard"
+  },
+  "FILTERS": {
+    "SELECT_FIELDS": "Select fields",
+    "ADD_CONDITION": "Add Condition",
+    "ADD_SORTING": "Add Sorting",
+    "CLEAR_FILTERS": "Clear Filters",
+    "APPLY_FILTERS": "Apply Filters"
+  },
+  "CHARTS": {
+    "NO_DATA": "No data to display",
+    "PIE": "Pie Chart",
+    "BAR": " Bar Chart"
+  },
+  "CATEGORIES": {
+    "CATEGORIES": "CATEGORIES",
+    "CLEAR_ALL": "Clear all",
+    "SELECT_ALL": "Select all"
+  },
+  "ELEMENTS": {
+    "MAP": "MAP",
+    "LIST": "LIST",
+    "CHART": "CHART",
+    "ADD_ELEMENT": "ADD AN ELEMENT"
+  },
+  "DASHBOARDS": {
+    "SEARCH": "Search for a dashboard",
+    "VIEW": "View",
+    "DELETE": "You are about to delete this dashboard."
+  },
+  "PREVIEW": {
+    "TRY_ADD": "Try adding some elements to your dashboard..."
+  },
+  "STREETMAP": {
+    "NAME": "Name"
+  }
+}

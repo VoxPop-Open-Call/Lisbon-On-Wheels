@@ -1,0 +1,12 @@
+.standard,
+.active {
+  text-decoration: none;
+}
+
+.standard {
+  color: inherit;
+}
+
+.active {
+  color: #1d8632;
+}

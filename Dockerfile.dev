@@ -1,0 +1,22 @@
+# CI Stage: continuous integration build / test 
+FROM node:18 as builder
+
+# transfer all npm to yarn
+
+WORKDIR /app
+COPY . .
+RUN npm install yarn
+RUN yarn install --frozen-lockfile 
+RUN yarn build --mode development
+RUN yarn lint
+# enable when prettier is enabled in package.json
+# RUN yarn prettier
+
+# CD Stage: continuous deployment
+FROM nginx:stable-alpine
+COPY --from=builder /app/dist/ /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+ENTRYPOINT [ "nginx", "-g", "daemon off;"]

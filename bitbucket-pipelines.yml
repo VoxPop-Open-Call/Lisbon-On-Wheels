@@ -1,0 +1,186 @@
+image: node:lts
+
+clone:
+  depth: full
+
+definitions:
+  services:
+    docker:
+      memory: 3000
+
+  installDependencies: &installDependencies
+    step:
+      name: 🛠 Install node modules
+      # npm ci --> yarn install --frozen-lockfile
+      # https://stackoverflow.com/questions/58482655/what-is-the-closest-to-npm-ci-in-yarn
+      script:
+        - yarn install --frozen-lockfile
+      caches:
+        - node
+
+  build: &build
+    step:
+      name: 🛠 Build
+      caches:
+        - node
+      script:
+        - yarn build
+
+  format: &format
+    step:
+      name: 🧹 Formatting
+      caches:
+        - node
+      script:
+        - yarn prettier
+
+  lint: &lint
+    step:
+      name: 🧹 Linting
+      caches:
+        - node
+      script:
+        - yarn lint
+
+  # environment variables are made STATIC in the image! 1 image per environment!!
+  buildImageDev: &buildImageDev
+    step:
+      name: 📦 Build and push Dev image
+      runs-on:
+        - self.hosted
+        - linux
+      size: 2x
+      services:
+        - docker
+      image: jeroentrappers/devops:tf1
+      script:
+        - TAG="$ECR/react_on_wheels_lisbon_dev:$BITBUCKET_BUILD_NUMBER"
+        - AWS_ACCESS_KEY_ID=$AWS_DEVOPS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY=$AWS_DEVOPS_SECRET
+        - aws configure set aws_access_key_id $AWS_DEVOPS_ACCESS_KEY_ID
+        - aws configure set aws_secret_access_key $AWS_DEVOPS_SECRET
+        - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR
+        - docker build . -f Dockerfile.dev --tag $TAG --progress=plain
+        - docker push $TAG
+
+  deployDev: &deployDev
+    step:
+      name: 🚀 Deploy dev to icapps-devops EKS cluster
+      runs-on:
+        - self.hosted
+        - linux
+      image: jeroentrappers/devops:tf1
+      deployment: development
+      script:
+        - AWS_ACCESS_KEY_ID=$AWS_DEVOPS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY=$AWS_DEVOPS_SECRET
+        - aws configure set aws_access_key_id $AWS_DEVOPS_ACCESS_KEY_ID
+        - aws configure set aws_secret_access_key $AWS_DEVOPS_SECRET
+        - aws eks update-kubeconfig --region eu-central-1 --name icapps-devops
+        - terraform init
+        - terraform workspace select dev
+        - terraform plan -var="backend-tag=$BITBUCKET_BUILD_NUMBER" -out plan.file
+        - terraform apply plan.file
+
+  # environment variables are made STATIC in the image! 1 image per environment!!
+  buildImageStaging: &buildImageStaging
+    step:
+      name: 📦 Build and push Staging image
+      runs-on:
+        - self.hosted
+        - linux
+      size: 2x
+      services:
+        - docker
+      image: jeroentrappers/devops:tf1
+      trigger: manual
+      script:
+        - TAG="$ECR/tour_de_icapps_dev:$BITBUCKET_BUILD_NUMBER"
+        - AWS_ACCESS_KEY_ID=$AWS_DEVOPS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY=$AWS_DEVOPS_SECRET
+        - aws configure set aws_access_key_id $AWS_DEVOPS_ACCESS_KEY_ID
+        - aws configure set aws_secret_access_key $AWS_DEVOPS_SECRET
+        - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR
+        - docker build . -f Dockerfile.dev --tag $TAG --progress=plain
+        - docker push $TAG
+
+  deployStaging: &deployStaging
+    step:
+      name: 🚀 Deploy staging to icapps-devops EKS cluster
+      runs-on:
+        - self.hosted
+        - linux
+      image: jeroentrappers/devops:tf1
+      deployment: staging
+      trigger: manual
+      script:
+        - AWS_ACCESS_KEY_ID=$AWS_DEVOPS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY=$AWS_DEVOPS_SECRET
+        - aws configure set aws_access_key_id $AWS_DEVOPS_ACCESS_KEY_ID
+        - aws configure set aws_secret_access_key $AWS_DEVOPS_SECRET
+        - aws eks update-kubeconfig --region eu-central-1 --name icapps-devops
+        - terraform init
+        - terraform workspace select staging
+        - terraform plan -var="backend-tag=$BITBUCKET_BUILD_NUMBER" -out plan.file
+        - terraform apply plan.file
+
+  # environment variables are made STATIC in the image! 1 image per environment!!
+  buildImageProd: &buildImageProd
+    step:
+      name: 📦 Build and push Prod image
+      runs-on:
+        - self.hosted
+        - linux
+      size: 2x
+      services:
+        - docker
+      image: jeroentrappers/devops:tf1
+      trigger: manual
+      script:
+        - TAG="$ECR_INT/tour_de_icapps:$BITBUCKET_BUILD_NUMBER"
+        - AWS_ACCESS_KEY_ID=$AWS_INT_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY=$AWS_INT_SECRET
+        - aws configure set aws_access_key_id $AWS_INT_ACCESS_KEY_ID
+        - aws configure set aws_secret_access_key $AWS_INT_SECRET
+        - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin $ECR_INT
+        - docker build . -f Dockerfile.production --tag $TAG --progress=plain
+        - docker push $TAG
+
+  deployProd: &deployProd
+    step:
+      name: 🚀 Deploy prod to icapps-internal EKS cluster
+      runs-on:
+        - self.hosted
+        - linux
+      image: jeroentrappers/devops:tf1
+      deployment: production
+      trigger: manual
+      script:
+        - AWS_ACCESS_KEY_ID=$AWS_INT_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY=$AWS_INT_SECRET
+        - aws configure set aws_access_key_id $AWS_INT_ACCESS_KEY_ID
+        - aws configure set aws_secret_access_key $AWS_INT_SECRET
+        - aws eks update-kubeconfig --region eu-central-1 --name icapps-internal
+        - terraform init
+        - terraform workspace select production
+        - terraform plan -var="backend-tag=$BITBUCKET_BUILD_NUMBER" -out plan.file
+        - terraform apply plan.file
+
+pipelines:
+  pull-requests:
+    '**': #this runs as default for any branch not elsewhere defined
+      - <<: *installDependencies
+      - parallel:
+          - <<: *build
+          - <<: *format
+          - <<: *lint
+  branches:
+    develop:
+      - <<: *buildImageDev
+      - <<: *deployDev
+    staging:
+      - <<: *buildImageStaging
+      - <<: *deployStaging
+    main:
+      - <<: *buildImageProd
+      - <<: *deployProd

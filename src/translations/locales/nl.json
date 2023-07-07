@@ -1,0 +1,16 @@
+{
+  "HEADER": { "TITLE": "Lisbon on wheels", "SUBTITLE": "Toegankelijkheidsdata voor Lissabon" },
+  "SIDEBAR": {
+    "DASHBOARD": "Dashboard",
+    "CREATE": {
+      "TITLE": "Creëer"
+    }
+  },
+  "CHARTS": {
+    "LIST": "Lijst",
+    "COLUMN": "Kollomgrafiek",
+    "PIE": "Cirkeldiagram",
+    "DOUGHNUT": "Donut grafiek",
+    "LINE": "Lijngrafiek"
+  }
+}
