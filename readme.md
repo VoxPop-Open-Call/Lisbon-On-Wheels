@@ -1,5 +1,9 @@
 # IMPORTANT NOTES:
 
+## .url working prototype
+
+http://lisbononwheels.eu
+
 ## .env
 
 - Momenteel zijn er geen env-variabelen in het project. Indien deze worden aangemaakt, moeten deze ook bij in de docker file (zie comment) gezet worden!
